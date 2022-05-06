@@ -39,7 +39,7 @@ jobs:
           body_path: "body.md"
           tag_name: v${{ env.REVISION }}
           files: |
-            "*.nupkg"
-            "*.snupkg"
+            *.nupkg
+            *.snupkg
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
