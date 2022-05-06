@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net6.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <PackageId>XeroxDev.DSharpPlus.ModalCommands</PackageId>
+        <Title>XeroxDev.DSharpPlus.ModalCommands</Title>
+        <Authors>XeroxDev</Authors>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Description>An extension for DSharpPlus to use modals like commands from CommandsNext</Description>
+        <PackageProjectUrl>https://github.com/XeroxDev/DSharpPlus.ModuleCommands</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/XeroxDev/DSharpPlus.ModuleCommands</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageVersion>1.0.0</PackageVersion>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="DSharpPlus" Version="4.3.0-nightly-01129" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    </ItemGroup>
+
+</Project>
