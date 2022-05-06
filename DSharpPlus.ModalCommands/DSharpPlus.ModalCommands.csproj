@@ -9,8 +9,8 @@
         <Authors>XeroxDev</Authors>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>An extension for DSharpPlus to use modals like commands from CommandsNext</Description>
-        <PackageProjectUrl>https://github.com/XeroxDev/DSharpPlus.ModuleCommands</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/XeroxDev/DSharpPlus.ModuleCommands</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/XeroxDev/DSharpPlus.ModalCommands</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/XeroxDev/DSharpPlus.ModalCommands</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
         <PackageVersion>1.0.0</PackageVersion>
     </PropertyGroup>
