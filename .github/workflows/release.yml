@@ -1,6 +1,6 @@
 name: Release
 
-on: 
+on:
   push:
     branches:
       - main
@@ -8,7 +8,7 @@ on:
 jobs:
   release:
     if: "!endsWith(github.event.head_commit.message, '[skip-ci]')"
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     name: "Bump version, create changelog with commitizen and create release"
     steps:
       - name: Check out
@@ -22,6 +22,14 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           changelog_increment_filename: body.md
           branch: main
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: "6.1.21"
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
       - name: Add nuget
         uses: nuget/setup-nuget@v1
       - name: Pack
