@@ -27,7 +27,7 @@ jobs:
         with:
           dotnet-version: "6.x.x"
       - name: Build and Pack
-        run: dotnet pack .\DSharpPlus.ModalCommands\DSharpPlus.ModalCommands.csproj -o .
+        run: dotnet pack DSharpPlus.ModalCommands/DSharpPlus.ModalCommands.csproj -o .
       - name: Push to nuget
         shell: bash
         env:
