@@ -26,24 +26,20 @@ jobs:
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: "6.x.x"
-      - name: Install dependencies
-        run: dotnet restore
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-      - name: Add nuget
-        uses: nuget/setup-nuget@v1
-      - name: Pack
-        run: nuget pack -Properties Configuration=Release DSharpPlus.ModalCommands/DSharpPlus.ModalCommands.csproj
+      - name: Build and Pack
+        run: dotnet pack .\DSharpPlus.ModalCommands\DSharpPlus.ModalCommands.csproj -o .
+      - name: Push to nuget
+        shell: bash
+        env:
+          NUGET_KEY: ${{ secrets.NUGET_KEY }}
+        run: dotnet nuget push "*.nupkg" -k $NUGET_KEY -s https://api.nuget.org/v3/index.json
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           body_path: "body.md"
           tag_name: v${{ env.REVISION }}
-          files: "*.nupkg"
+          files: |
+            "*.nupkg"
+            "*.snupkg"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push
-        shell: bash
-        env:
-          NUGET_KEY: ${{ secrets.NUGET_KEY }}
-        run: nuget push ./*.nupkg -NonInteractive -src https://api.nuget.org/v3/index.json -ApiKey $NUGET_KEY

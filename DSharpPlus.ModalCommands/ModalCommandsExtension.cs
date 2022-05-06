@@ -80,9 +80,9 @@ public class ModalCommandsExtension : BaseExtension
         };
 
         _convertMethod = typeof(ModalCommandsExtension).GetTypeInfo().DeclaredMethods.FirstOrDefault(xm =>
-            xm.Name == "ConvertArgument" && xm.ContainsGenericParameters && !xm.IsStatic) ?? throw new InvalidOperationException();
+            xm.Name == "ConvertArgument" && xm.ContainsGenericParameters && !xm.IsStatic);
         _convertToModalIdMethod = typeof(ModalCommandsExtension).GetTypeInfo().DeclaredMethods.FirstOrDefault(xm =>
-            xm.Name == "ConvertArgumentToModalId" && xm.ContainsGenericParameters && !xm.IsStatic) ?? throw new InvalidOperationException();
+            xm.Name == "ConvertArgumentToModalId" && xm.ContainsGenericParameters && !xm.IsStatic);
     }
 
     protected override void Setup(DiscordClient client)
