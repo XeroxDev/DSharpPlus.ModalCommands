@@ -33,7 +33,7 @@ jobs:
       - name: Add nuget
         uses: nuget/setup-nuget@v1
       - name: Pack
-        run: nuget pack DSharpPlus.ModalCommands/DSharpPlus.ModalCommands.csproj
+        run: nuget pack -Properties Configuration=Release DSharpPlus.ModalCommands/DSharpPlus.ModalCommands.csproj
       - name: Create release
         uses: softprops/action-gh-release@v1
         with:
