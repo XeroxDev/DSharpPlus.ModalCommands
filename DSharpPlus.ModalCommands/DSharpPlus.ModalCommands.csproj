@@ -4,6 +4,7 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AssemblyName>XeroxDev.DSharpPlus.ModalCommands</AssemblyName>
         <PackageId>XeroxDev.DSharpPlus.ModalCommands</PackageId>
         <Title>XeroxDev.DSharpPlus.ModalCommands</Title>
         <Authors>XeroxDev</Authors>
