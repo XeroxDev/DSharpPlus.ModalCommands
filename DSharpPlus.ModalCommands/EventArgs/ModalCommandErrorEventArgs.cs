@@ -27,6 +27,7 @@ namespace DSharpPlus.ModalCommands.EventArgs;
 public class ModalCommandErrorEventArgs : AsyncEventArgs
 {
     public string ModalId { get; set; }
+    public string CommandName { get; set; }
     public ModalContext Context { get; set; }
     public Exception Exception { get; set; }
 }

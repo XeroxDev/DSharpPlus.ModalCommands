@@ -27,5 +27,6 @@ namespace DSharpPlus.ModalCommands;
 public class ModalCommandsConfiguration
 {
     public string Prefix { get; set; } = ">";
+    public string Seperator { get; set; } = "|";
     public IServiceProvider Services { internal get; set; } = new ServiceCollection().BuildServiceProvider(true);
 }

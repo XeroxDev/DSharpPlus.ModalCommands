@@ -26,5 +26,11 @@ namespace DSharpPlus.ModalCommands;
 
 public static class ModalBuilder
 {
-    public static DiscordInteractionResponseBuilder Create(string id) => new DiscordInteractionResponseBuilder().WithCustomId($"{ModalCommandsExtension.Config.Prefix}{id}"); // Much lazy, much wow! And yes. ..Config was not static before. I just made it static for this!
+    public static DiscordInteractionResponseBuilder Create(string id, string[]? args = null)
+    {
+        var joinedArgs = args is null ? string.Empty : string.Join(ModalCommandsExtension.Config.Seperator, args);
+        if (!string.IsNullOrWhiteSpace(joinedArgs)) joinedArgs = $"{ModalCommandsExtension.Config.Seperator}{joinedArgs}";
+        return new DiscordInteractionResponseBuilder().WithCustomId($"{ModalCommandsExtension.Config.Prefix}{id}{joinedArgs}");
+        // Much lazy, much wow! And yes. ModalCommandsExtension.Config was not static before. I just made it static for this!
+    }
 }

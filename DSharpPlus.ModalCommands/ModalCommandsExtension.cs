@@ -98,22 +98,26 @@ public class ModalCommandsExtension : BaseExtension
         var id = args.Interaction.Data.CustomId;
         if (!id.StartsWith(Config.Prefix)) return;
         id = id.Substring(Config.Prefix.Length);
+        var additionalArgs = id.Split(Config.Seperator);
+        var commandName = additionalArgs[0];
+        var devArgs = additionalArgs.Skip(1).ToArray();
 
-        if (!_commands.ContainsKey(id)) return;
-        var command = _commands[id];
+        if (!_commands.ContainsKey(commandName)) return;
+        var command = _commands[commandName];
 
         var ctx = BuildContext(sender, args);
         object[] arguments;
 
         try
         {
-            arguments = await BuildArguments(command.Method, args.Values, ctx);
+            arguments = await BuildArguments(command.Method, devArgs, args.Values, ctx);
         }
         catch (Exception ex)
         {
             await _error.InvokeAsync(this, new ModalCommandErrorEventArgs()
             {
                 ModalId = id,
+                CommandName = commandName,
                 Context = ctx,
                 Exception = new Exception($"An error has occurred while submitting modal {id}.", ex),
                 Handled = false
@@ -129,6 +133,7 @@ public class ModalCommandsExtension : BaseExtension
             await _executed.InvokeAsync(this, new ModalCommandExecutionEventArgs()
             {
                 ModalId = id,
+                CommandName = commandName,
                 Context = ctx,
                 Handled = true
             });
@@ -138,6 +143,7 @@ public class ModalCommandsExtension : BaseExtension
             await _error.InvokeAsync(this, new ModalCommandErrorEventArgs()
             {
                 ModalId = id,
+                CommandName = commandName,
                 Context = ctx,
                 Exception = new Exception($"An error has occured while executing button command '{command}'.", e),
                 Handled = false
@@ -181,10 +187,14 @@ public class ModalCommandsExtension : BaseExtension
         Values = args.Values.Values.ToArray()
     };
 
-    private async Task<object[]> BuildArguments(MethodInfo method, IReadOnlyDictionary<string, string> values, ModalContext ctx)
+    private async Task<object[]> BuildArguments(MethodInfo method, string[]? devArgs, IReadOnlyDictionary<string, string> values, ModalContext ctx)
     {
         List<object> arguments = new() { ctx };
-        for (var i = 1; i < method.GetParameters().Length; i++) arguments.Add(await ConvertArgument(method.GetParameters()[i], values.Values.ToList()[i - 1], ctx));
+        var args = Array.Empty<string>();
+        if (devArgs is not null) args = args.Concat(devArgs).ToArray();
+
+        args = args.Concat(values.Values).ToArray();
+        for (var i = 1; i < method.GetParameters().Length; i++) arguments.Add(await ConvertArgument(method.GetParameters()[i], args[i - 1], ctx));
         return arguments.ToArray();
     }
 
