@@ -93,9 +93,9 @@ public class ModalCommandsExtension : BaseExtension
         _error = new AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs>("MODALCOMMAND_ERRORED", TimeSpan.Zero, null);
     }
 
-    private async Task HandleSubmission(DiscordClient sender, ModalSubmitEventArgs args)
+    private async Task HandleSubmission(DiscordClient sender, ModalSubmitEventArgs modalSubmit)
     {
-        var id = args.Interaction.Data.CustomId;
+        var id = modalSubmit.Interaction.Data.CustomId;
         if (!id.StartsWith(Config.Prefix)) return;
         id = id.Substring(Config.Prefix.Length);
         var additionalArgs = id.Split(Config.Seperator);
@@ -105,12 +105,16 @@ public class ModalCommandsExtension : BaseExtension
         if (!_commands.ContainsKey(commandName)) return;
         var command = _commands[commandName];
 
-        var ctx = BuildContext(sender, args);
+        var args = Array.Empty<string>();
+        args = args.Concat(devArgs).ToArray();
+        args = args.Concat(modalSubmit.Values.Values.ToArray()).ToArray();
+
+        var ctx = BuildContext(sender, modalSubmit, args);
         object[] arguments;
 
         try
         {
-            arguments = await BuildArguments(command.Method, devArgs, args.Values, ctx);
+            arguments = await BuildArguments(command.Method, args, ctx);
         }
         catch (Exception ex)
         {
@@ -125,7 +129,7 @@ public class ModalCommandsExtension : BaseExtension
             return;
         }
 
-        args.Handled = true;
+        modalSubmit.Handled = true;
 
         try
         {
@@ -176,24 +180,12 @@ public class ModalCommandsExtension : BaseExtension
         }
     }
 
-    private ModalContext BuildContext(DiscordClient client, ModalSubmitEventArgs args) => new()
-    {
-        Channel = args.Interaction.Channel,
-        Client = client,
-        Guild = args.Interaction.Guild,
-        Interaction = args.Interaction,
-        User = args.Interaction.User,
-        ModalCommandsExtension = this,
-        Values = args.Values.Values.ToArray()
-    };
+    private ModalContext BuildContext(DiscordClient client, ModalSubmitEventArgs e, string[] args) =>
+        new(e.Interaction, client, e.Interaction.Guild, e.Interaction.Channel, e.Interaction.User, this, args);
 
-    private async Task<object[]> BuildArguments(MethodInfo method, string[]? devArgs, IReadOnlyDictionary<string, string> values, ModalContext ctx)
+    private async Task<object[]> BuildArguments(MethodInfo method, string[] args, ModalContext ctx)
     {
         List<object> arguments = new() { ctx };
-        var args = Array.Empty<string>();
-        if (devArgs is not null) args = args.Concat(devArgs).ToArray();
-
-        args = args.Concat(values.Values).ToArray();
         for (var i = 1; i < method.GetParameters().Length; i++) arguments.Add(await ConvertArgument(method.GetParameters()[i], args[i - 1], ctx));
         return arguments.ToArray();
     }
