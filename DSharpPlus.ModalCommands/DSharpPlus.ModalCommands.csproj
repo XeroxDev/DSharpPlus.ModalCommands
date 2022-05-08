@@ -13,10 +13,10 @@
         <PackageProjectUrl>https://github.com/XeroxDev/DSharpPlus.ModalCommands</PackageProjectUrl>
         <RepositoryUrl>https://github.com/XeroxDev/DSharpPlus.ModalCommands</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <PackageVersion>1.0.1</PackageVersion>
+        <PackageVersion>1.1.0</PackageVersion>
         <PackageTags>DSharpPlus Discord C# DotNet 6.0 Modals</PackageTags>
-        <AssemblyVersion>1.0.1</AssemblyVersion>
-        <FileVersion>1.0.1</FileVersion>
+        <AssemblyVersion>1.1.0</AssemblyVersion>
+        <FileVersion>1.1.0</FileVersion>
         <NeutralLanguage>en-001</NeutralLanguage>
         <IncludeSymbols>true</IncludeSymbols>
         <SymbolPackageFormat>snupkg</SymbolPackageFormat>

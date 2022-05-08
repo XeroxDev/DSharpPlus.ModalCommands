@@ -1,3 +1,10 @@
+## v1.1.0 (2022-05-08)
+
+### Feat
+
+- add response methods like in slash commands
+- allow modal to carry secret data
+
 ## v1.0.1 (2022-05-06)
 
 ### Fix
