@@ -56,10 +56,11 @@ internal static class InstanceCreator
         }
 
         var arguments = new object[constructorArguments.Length];
-
+        
+        var scope = services.CreateScope();
         for (var i = 0; i < arguments.Length; i++)
         {
-            arguments[i] = services.GetRequiredService(constructorArguments[i].ParameterType);
+            arguments[i] = scope.ServiceProvider.GetRequiredService(constructorArguments[i].ParameterType);
         }
 
         var moduleInstance = Activator.CreateInstance(t, arguments);
