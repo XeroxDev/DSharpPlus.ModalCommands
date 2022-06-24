@@ -1,3 +1,9 @@
+## v1.2.0 (2022-06-24)
+
+### Feat
+
+- add before/after command execution
+
 ## v1.1.1 (2022-06-04)
 
 ### Fix
