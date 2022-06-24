@@ -1,3 +1,9 @@
+## v1.2.1 (2022-06-24)
+
+### Refactor
+
+- **csproj**: update DS+ and fix version of SourceLink.GitHub
+
 ## v1.2.0 (2022-06-24)
 
 ### Feat
