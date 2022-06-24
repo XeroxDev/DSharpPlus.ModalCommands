@@ -26,7 +26,7 @@ namespace DSharpPlus.ModalCommands;
 
 public static class ModalBuilder
 {
-    public static DiscordInteractionResponseBuilder Create(string id, string[]? args = null)
+    public static DiscordInteractionResponseBuilder Create(string id, params string[]? args)
     {
         var joinedArgs = args is null ? string.Empty : string.Join(ModalCommandsExtension.Config.Seperator, args);
         if (!string.IsNullOrWhiteSpace(joinedArgs)) joinedArgs = $"{ModalCommandsExtension.Config.Seperator}{joinedArgs}";

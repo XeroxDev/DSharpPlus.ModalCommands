@@ -34,56 +34,17 @@ namespace DSharpPlus.ModalCommands;
 
 public class ModalCommandsExtension : BaseExtension
 {
+    #region Private / Internal methods, fields and properties. These are used internally.
+
     internal static ModalCommandsConfiguration Config = new();
 
-    private Dictionary<string, ModalCommand> _commands;
+    private readonly Dictionary<string, ModalCommand> _commands = new();
 
-    private Dictionary<Type, IModalArgumentConverter> _converters;
-    private MethodInfo _convertMethod;
-    private MethodInfo _convertToModalIdMethod;
+    private readonly Dictionary<Type, IModalArgumentConverter> _converters;
+    private readonly MethodInfo? _convertMethod;
 
-    public event AsyncEventHandler<ModalCommandsExtension, ModalCommandExecutionEventArgs> ModalCommandExecuted
-    {
-        add => _executed.Register(value);
-        remove => _executed.Unregister(value);
-    }
-
-    private AsyncEvent<ModalCommandsExtension, ModalCommandExecutionEventArgs> _executed;
-
-    public event AsyncEventHandler<ModalCommandsExtension, ModalCommandErrorEventArgs> ModalCommandErrored
-    {
-        add => _error.Register(value);
-        remove => _error.Unregister(value);
-    }
-
-    private AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs> _error;
-
-
-    public ModalCommandsExtension(ModalCommandsConfiguration config)
-    {
-        Config = config;
-        _commands = new Dictionary<string, ModalCommand>();
-        _converters = new Dictionary<Type, IModalArgumentConverter>()
-        {
-            [typeof(string)] = new StringConverter(),
-            [typeof(bool)] = new BoolConverter(),
-            [typeof(int)] = new IntConverter(),
-            [typeof(uint)] = new UintConverter(),
-            [typeof(long)] = new LongConverter(),
-            [typeof(ulong)] = new UlongConverter(),
-            [typeof(float)] = new FloatConverter(),
-            [typeof(double)] = new DoubleConverter(),
-            [typeof(DiscordUser)] = new DiscordUserConverter(),
-            [typeof(DiscordMember)] = new DiscordMemberConverter(),
-            [typeof(DiscordRole)] = new DiscordRoleConverter(),
-            [typeof(DiscordChannel)] = new DiscordChannelConverter()
-        };
-
-        _convertMethod = typeof(ModalCommandsExtension).GetTypeInfo().DeclaredMethods.FirstOrDefault(xm =>
-            xm.Name == "ConvertArgument" && xm.ContainsGenericParameters && !xm.IsStatic);
-        _convertToModalIdMethod = typeof(ModalCommandsExtension).GetTypeInfo().DeclaredMethods.FirstOrDefault(xm =>
-            xm.Name == "ConvertArgumentToModalId" && xm.ContainsGenericParameters && !xm.IsStatic);
-    }
+    private AsyncEvent<ModalCommandsExtension, ModalCommandExecutionEventArgs>? _executed;
+    private AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs>? _error;
 
     protected override void Setup(DiscordClient client)
     {
@@ -118,41 +79,133 @@ public class ModalCommandsExtension : BaseExtension
         }
         catch (Exception ex)
         {
-            await _error.InvokeAsync(this, new ModalCommandErrorEventArgs()
+            if (_error is not null)
             {
-                ModalId = id,
-                CommandName = commandName,
-                Context = ctx,
-                Exception = new Exception($"An error has occurred while submitting modal {id}.", ex),
-                Handled = false
-            });
+                await _error.InvokeAsync(this, new ModalCommandErrorEventArgs
+                {
+                    ModalId = id,
+                    CommandName = commandName,
+                    Context = ctx,
+                    Exception = new Exception($"An error has occurred while submitting modal {id}.", ex),
+                    Handled = false
+                });
+            }
+
             return;
         }
 
         modalSubmit.Handled = true;
 
+        var commandInstance = (ModalCommandModule)SpawnInstance(command);
+
+        if (!await commandInstance.BeforeModalExecutionAsync(ctx)) return;
+
         try
         {
-            await (Task)command.Method.Invoke(SpawnInstance(command), arguments);
-            await _executed.InvokeAsync(this, new ModalCommandExecutionEventArgs()
+            var invokedCommand = (Task?)command.Method.Invoke(commandInstance, arguments);
+            if (invokedCommand is not null)
             {
-                ModalId = id,
-                CommandName = commandName,
-                Context = ctx,
-                Handled = true
-            });
+                await invokedCommand;
+                await commandInstance.AfterModalExecutionAsync(ctx);
+            }
+
+            if (_executed is not null)
+            {
+                await _executed.InvokeAsync(this, new ModalCommandExecutionEventArgs
+                {
+                    ModalId = id,
+                    CommandName = commandName,
+                    Context = ctx,
+                    Handled = true
+                });
+            }
         }
         catch (Exception e)
         {
-            await _error.InvokeAsync(this, new ModalCommandErrorEventArgs()
+            if (_error is not null)
             {
-                ModalId = id,
-                CommandName = commandName,
-                Context = ctx,
-                Exception = new Exception($"An error has occured while executing button command '{command}'.", e),
-                Handled = false
-            });
+                await _error.InvokeAsync(this, new ModalCommandErrorEventArgs
+                {
+                    ModalId = id,
+                    CommandName = commandName,
+                    Context = ctx,
+                    Exception = new Exception($"An error has occured while executing button command '{command}'.", e),
+                    Handled = false
+                });
+            }
         }
+    }
+
+    private ModalContext BuildContext(DiscordClient client, ModalSubmitEventArgs e, string[] args) =>
+        new(e.Interaction, client, e.Interaction.Guild, e.Interaction.Channel, e.Interaction.User, this, args);
+
+    private async Task<object[]> BuildArguments(MethodBase method, IReadOnlyList<string> args, ModalContext ctx)
+    {
+        List<object> arguments = new() { ctx };
+        for (var i = 1; i < method.GetParameters().Length; i++) arguments.Add(await ConvertArgument(method.GetParameters()[i], args[i - 1], ctx));
+        return arguments.ToArray();
+    }
+
+    private async Task<object> ConvertArgument(ParameterInfo parameterInfo, string arg, ModalContext ctx)
+    {
+        var m = _convertMethod?.MakeGenericMethod(parameterInfo.ParameterType);
+        try
+        {
+            var task = (Task<object>?)m?.Invoke(this, new object[] { arg, ctx });
+            if (task is null) throw new ArgumentException($"Invalid converter registered for '{parameterInfo.ParameterType.Name}'");
+            return await task;
+        }
+        catch (ArgumentException)
+        {
+            throw new InvalidCastException($"An argument type of {parameterInfo.ParameterType} is not supported. Try adding a converter using ModalCommandsExtension#AddConverter");
+        }
+        catch (TargetInvocationException ex)
+        {
+            if (ex.InnerException is not null)
+                throw ex.InnerException;
+            throw;
+        }
+    }
+
+    private object SpawnInstance(ModalCommand command) => InstanceCreator.CreateInstance(command.Method.DeclaringType ?? typeof(ModalCommandModule), Config.Services);
+
+    #endregion
+
+    #region All public methods, fields and properties. These are used by the user.
+
+    public ModalCommandsExtension(ModalCommandsConfiguration config)
+    {
+        Config = config;
+        _converters = new Dictionary<Type, IModalArgumentConverter>
+        {
+            [typeof(string)] = new StringConverter(),
+            [typeof(bool)] = new BoolConverter(),
+            [typeof(int)] = new IntConverter(),
+            [typeof(uint)] = new UintConverter(),
+            [typeof(long)] = new LongConverter(),
+            [typeof(ulong)] = new UlongConverter(),
+            [typeof(float)] = new FloatConverter(),
+            [typeof(double)] = new DoubleConverter(),
+            [typeof(DiscordUser)] = new DiscordUserConverter(),
+            [typeof(DiscordMember)] = new DiscordMemberConverter(),
+            [typeof(DiscordRole)] = new DiscordRoleConverter(),
+            [typeof(DiscordChannel)] = new DiscordChannelConverter()
+        };
+
+        _convertMethod = typeof(ModalCommandsExtension).GetTypeInfo().DeclaredMethods.FirstOrDefault(xm =>
+            xm.Name == "ConvertArgument" && xm.ContainsGenericParameters && !xm.IsStatic);
+    }
+
+    public event AsyncEventHandler<ModalCommandsExtension, ModalCommandExecutionEventArgs> ModalCommandExecuted
+    {
+        add => _executed?.Register(value);
+        remove => _executed?.Unregister(value);
+    }
+
+    public event AsyncEventHandler<ModalCommandsExtension, ModalCommandErrorEventArgs> ModalCommandErrored
+    {
+        add => _error?.Register(value);
+        remove => _error?.Unregister(value);
     }
 
     public void RegisterModals<T>() => RegisterModals(typeof(T));
@@ -180,51 +233,6 @@ public class ModalCommandsExtension : BaseExtension
         }
     }
 
-    private ModalContext BuildContext(DiscordClient client, ModalSubmitEventArgs e, string[] args) =>
-        new(e.Interaction, client, e.Interaction.Guild, e.Interaction.Channel, e.Interaction.User, this, args);
-
-    private async Task<object[]> BuildArguments(MethodInfo method, string[] args, ModalContext ctx)
-    {
-        List<object> arguments = new() { ctx };
-        for (var i = 1; i < method.GetParameters().Length; i++) arguments.Add(await ConvertArgument(method.GetParameters()[i], args[i - 1], ctx));
-        return arguments.ToArray();
-    }
-
-
-    private async Task<object> ConvertArgument<T>(string arg, ModalContext ctx)
-    {
-        if (!_converters.TryGetValue(typeof(T), out var conv))
-            throw new ArgumentException($"Unknown argument type '{typeof(T).Name}'");
-        if (conv is IModalArgumentConverter<T> converter)
-            return (await converter.ConvertAsync(arg, ctx)).Value;
-
-        throw new ArgumentException($"Invalid converter registered for '{typeof(T).Name}'");
-    }
-
-    private async Task<object> ConvertArgument(ParameterInfo parameterInfo, string arg, ModalContext ctx)
-    {
-        var m = _convertMethod.MakeGenericMethod(parameterInfo.ParameterType);
-        try
-        {
-            var task = (Task<object>)m.Invoke(this, new object[] { arg, ctx });
-            if (task == null) throw new ArgumentException($"Invalid converter registered for '{parameterInfo.ParameterType.Name}'");
-            return await task;
-        }
-        catch (ArgumentException)
-        {
-            throw new InvalidCastException($"An argument type of {parameterInfo.ParameterType} is not supported. Try adding a converter using ModalCommandsExtension#AddConverter");
-        }
-        catch (TargetInvocationException ex)
-        {
-            if (ex.InnerException is not null)
-                throw ex.InnerException;
-            throw;
-        }
-    }
-
-    private object SpawnInstance(ModalCommand command) => InstanceCreator.CreateInstance(command.Method.DeclaringType ?? typeof(ModalCommandModule), Config.Services);
-
-
     public void RegisterConverter<T>(IModalArgumentConverter<T> converter)
     {
         if (converter == null) throw new ArgumentNullException(nameof(converter), "Converter cannot be null.");
@@ -234,4 +242,6 @@ public class ModalCommandsExtension : BaseExtension
 
 
     public bool UnregisterConverter<T>() => _converters.Remove(typeof(T));
+
+    #endregion
 }

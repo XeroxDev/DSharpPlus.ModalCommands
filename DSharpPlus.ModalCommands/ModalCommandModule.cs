@@ -24,5 +24,16 @@ namespace DSharpPlus.ModalCommands;
 
 public class ModalCommandModule
 {
-    // Yaay. Such empty
+    /// <summary>
+    /// Called before the execution of the command.
+    /// </summary>
+    /// <param name="ctx">The context of the command</param>
+    /// <returns>Weather or not the command should be executed.</returns>
+    public virtual Task<bool> BeforeModalExecutionAsync(ModalContext ctx) => Task.FromResult(true);
+    
+    /// <summary>
+    /// Called after the execution of the command.
+    /// </summary>
+    /// <param name="ctx">The context of the command</param>
+    public virtual Task AfterModalExecutionAsync(ModalContext ctx) => Task.CompletedTask;
 }
