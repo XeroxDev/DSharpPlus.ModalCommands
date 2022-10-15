@@ -174,6 +174,9 @@ public class ModalCommandsExtension : BaseExtension
 
     #region All public methods, fields and properties. These are used by the user.
 
+    /// <summary>
+    /// Gets a list of registered commands. The key is the command name.
+    /// </summary>
     public ReadOnlyDictionary<string, ModalCommand> RegisteredCommands => new ReadOnlyDictionary<string, ModalCommand>(_commands);
 
     public ModalCommandsExtension(ModalCommandsConfiguration config)
