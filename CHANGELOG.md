@@ -1,3 +1,9 @@
+## v1.3.0 (2022-10-15)
+
+### Feat
+
+- expose registered commands
+
 ## v1.2.1 (2022-06-24)
 
 ### Refactor
