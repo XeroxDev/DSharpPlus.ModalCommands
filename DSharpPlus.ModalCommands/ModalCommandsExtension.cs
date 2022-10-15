@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using System.Collections.ObjectModel;
 using System.Reflection;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -172,6 +173,11 @@ public class ModalCommandsExtension : BaseExtension
     #endregion
 
     #region All public methods, fields and properties. These are used by the user.
+
+    /// <summary>
+    /// Gets a list of registered commands. The key is the command name.
+    /// </summary>
+    public ReadOnlyDictionary<string, ModalCommand> RegisteredCommands => new ReadOnlyDictionary<string, ModalCommand>(_commands);
 
     public ModalCommandsExtension(ModalCommandsConfiguration config)
     {
