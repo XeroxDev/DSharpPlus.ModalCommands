@@ -75,7 +75,7 @@ internal static class InstanceCreator
                 continue;
             }
 
-            var service = services.GetService(property.PropertyType);
+            var service = scope.ServiceProvider.GetService(property.PropertyType);
 
             if (service == null)
             {
@@ -94,7 +94,7 @@ internal static class InstanceCreator
                 continue;
             }
 
-            var service = services.GetService(field.FieldType);
+            var service = scope.ServiceProvider.GetService(field.FieldType);
 
             if (service == null)
             {
