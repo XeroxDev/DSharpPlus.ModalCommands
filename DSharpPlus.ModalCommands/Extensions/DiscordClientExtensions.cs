@@ -24,7 +24,7 @@ namespace DSharpPlus.ModalCommands.Extensions;
 
 public static class DiscordClientExtensions
 {
-    public static ModalCommandsExtension UseModalCommands(this DiscordClient client, ModalCommandsConfiguration config = null)
+    public static ModalCommandsExtension UseModalCommands(this DiscordClient client, ModalCommandsConfiguration? config = null)
     {
         ModalCommandsExtension ext = new(config ?? new ModalCommandsConfiguration());
         client.AddExtension(ext);

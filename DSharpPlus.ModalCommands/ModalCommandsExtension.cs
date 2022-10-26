@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System.Collections.ObjectModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -130,7 +131,7 @@ public class ModalCommandsExtension : BaseExtension
                     ModalId = id,
                     CommandName = commandName,
                     Context = ctx,
-                    Exception = new Exception($"An error has occured while executing button command '{command}'.", e),
+                    Exception = new Exception($"An error has occured while executing modal command '{command}'.", e),
                     Handled = false
                 });
             }
@@ -147,18 +148,29 @@ public class ModalCommandsExtension : BaseExtension
         return arguments.ToArray();
     }
 
+    [SuppressMessage("ReSharper", "UnusedMember.Local")]
+    private async Task<object?> ConvertArgument<T>(string arg, ModalContext ctx)
+    {
+        if (!_converters.TryGetValue(typeof(T), out var conv))
+            throw new ArgumentException($"Unknown argument type '{typeof(T).Name}'");
+        if (conv is IModalArgumentConverter<T> converter)
+            return (await converter.ConvertAsync(arg, ctx)).Value;
+
+        throw new ArgumentException($"Invalid converter registered for '{typeof(T).Name}'");
+    }
+
     private async Task<object> ConvertArgument(ParameterInfo parameterInfo, string arg, ModalContext ctx)
     {
         var m = _convertMethod?.MakeGenericMethod(parameterInfo.ParameterType);
         try
         {
-            var task = (Task<object>?)m?.Invoke(this, new object[] { arg, ctx });
-            if (task is null) throw new ArgumentException($"Invalid converter registered for '{parameterInfo.ParameterType.Name}'");
-            return await task;
+            return m?.Invoke(this, new object[] { arg, ctx }) is not Task<object> task
+                ? throw new ArgumentException($"Invalid converter registered for '{parameterInfo.ParameterType.Name}'")
+                : await task;
         }
         catch (ArgumentException)
         {
-            throw new InvalidCastException($"An argument type of {parameterInfo.ParameterType} is not supported. Try adding a converter using ModalCommandsExtension#AddConverter");
+            throw new InvalidCastException($"An argument type of {parameterInfo.ParameterType} is not supported. Try adding a converter using ModalCommandsExtension#RegisterConverter");
         }
         catch (TargetInvocationException ex)
         {
