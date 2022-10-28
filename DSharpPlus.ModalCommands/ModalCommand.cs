@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using System.Reflection;
+#pragma warning disable CS8618
 
 namespace DSharpPlus.ModalCommands;
 

@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 using Emzi0767.Utilities;
+#pragma warning disable CS8618
 
 namespace DSharpPlus.ModalCommands.EventArgs;
 

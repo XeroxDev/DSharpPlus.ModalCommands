@@ -75,7 +75,7 @@ internal static class InstanceCreator
                 continue;
             }
 
-            var service = services.GetService(property.PropertyType);
+            var service = scope.ServiceProvider.GetService(property.PropertyType);
 
             if (service == null)
             {
@@ -94,7 +94,7 @@ internal static class InstanceCreator
                 continue;
             }
 
-            var service = services.GetService(field.FieldType);
+            var service = scope.ServiceProvider.GetService(field.FieldType);
 
             if (service == null)
             {
@@ -104,6 +104,11 @@ internal static class InstanceCreator
             field.SetValue(moduleInstance, service);
         }
 
+        //
+        // Note: CreateInstance returns null for Nullable<T>, e.g. CreateInstance(typeof(int?)) returns null.
+        //
+#pragma warning disable CS8603
         return moduleInstance;
+#pragma warning restore CS8603
     }
 }
