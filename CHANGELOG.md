@@ -1,3 +1,9 @@
+## v1.3.1 (2022-10-28)
+
+### Fix
+
+- Argument Converters and DI (#4)
+
 ## v1.3.0 (2022-10-15)
 
 ### Feat
