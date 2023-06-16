@@ -96,7 +96,6 @@ public class ModalCommandsExtension : BaseExtension
             return;
         }
 
-        modalSubmit.Handled = true;
 
         var commandInstance = (ModalCommandModule)SpawnInstance(command);
 
@@ -260,6 +259,11 @@ public class ModalCommandsExtension : BaseExtension
 
 
     public bool UnregisterConverter<T>() => _converters.Remove(typeof(T));
+
+    public override void Dispose()
+    {
+        //i guess if it worked before without dispose it'd work now, so I'm not implementing anything :)
+    }
 
     #endregion
 }
