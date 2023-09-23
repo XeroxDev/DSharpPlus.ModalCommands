@@ -1,3 +1,14 @@
+## v2.0.0 (2023-09-23)
+
+### BREAKING CHANGE
+
+- Due to upgrading the DI package to v7, this COULD break your setup. Especially
+because lang level was set to 11
+
+### Fix
+
+- fix dispose issue and upgrade packages
+
 ## v1.3.1 (2022-10-28)
 
 ### Fix
