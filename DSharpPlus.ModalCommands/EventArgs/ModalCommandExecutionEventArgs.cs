@@ -20,7 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-using Emzi0767.Utilities;
+using DSharpPlus.AsyncEvents;
+
 #pragma warning disable CS8618
 
 namespace DSharpPlus.ModalCommands.EventArgs;

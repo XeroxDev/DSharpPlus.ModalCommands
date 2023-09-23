@@ -23,12 +23,12 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using DSharpPlus.AsyncEvents;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.ModalCommands.Attributes;
 using DSharpPlus.ModalCommands.Converters;
 using DSharpPlus.ModalCommands.EventArgs;
-using Emzi0767.Utilities;
 using static DSharpPlus.ModalCommands.Converters.EntityConverters;
 using static DSharpPlus.ModalCommands.Converters.GeneralConverters;
 
@@ -47,13 +47,14 @@ public class ModalCommandsExtension : BaseExtension
 
     private AsyncEvent<ModalCommandsExtension, ModalCommandExecutionEventArgs>? _executed;
     private AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs>? _error;
+    
 
     protected override void Setup(DiscordClient client)
     {
         if (Client is not null) throw new InvalidOperationException("Do NOT run Setup() yourself.");
         client.ModalSubmitted += HandleSubmission;
-        _executed = new AsyncEvent<ModalCommandsExtension, ModalCommandExecutionEventArgs>("MODALCOMMAND_EXECUTED", TimeSpan.Zero, null);
-        _error = new AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs>("MODALCOMMAND_ERRORED", TimeSpan.Zero, null);
+        _executed = new AsyncEvent<ModalCommandsExtension, ModalCommandExecutionEventArgs>("MODALCOMMAND_EXECUTED", null);
+        _error = new AsyncEvent<ModalCommandsExtension, ModalCommandErrorEventArgs>("MODALCOMMAND_ERRORED", null);
     }
 
     private async Task HandleSubmission(DiscordClient sender, ModalSubmitEventArgs modalSubmit)
@@ -88,15 +89,12 @@ public class ModalCommandsExtension : BaseExtension
                     ModalId = id,
                     CommandName = commandName,
                     Context = ctx,
-                    Exception = new Exception($"An error has occurred while submitting modal {id}.", ex),
-                    Handled = false
+                    Exception = new Exception($"An error has occurred while submitting modal {id}.", ex)
                 });
             }
 
             return;
         }
-
-        modalSubmit.Handled = true;
 
         var commandInstance = (ModalCommandModule)SpawnInstance(command);
 
@@ -117,8 +115,7 @@ public class ModalCommandsExtension : BaseExtension
                 {
                     ModalId = id,
                     CommandName = commandName,
-                    Context = ctx,
-                    Handled = true
+                    Context = ctx
                 });
             }
         }
@@ -131,8 +128,7 @@ public class ModalCommandsExtension : BaseExtension
                     ModalId = id,
                     CommandName = commandName,
                     Context = ctx,
-                    Exception = new Exception($"An error has occured while executing modal command '{command}'.", e),
-                    Handled = false
+                    Exception = new Exception($"An error has occured while executing modal command '{command}'.", e)
                 });
             }
         }
@@ -262,4 +258,13 @@ public class ModalCommandsExtension : BaseExtension
     public bool UnregisterConverter<T>() => _converters.Remove(typeof(T));
 
     #endregion
+    
+    public override void Dispose()
+    {
+        _executed = null;
+        _error = null;
+        _commands.Clear();
+        _converters.Clear();
+    }
+    
 }
